@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="JlF-J1-AmL">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Home View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="HomeViewController" customModule="glovo_app" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="LfC-yg-WGj" customClass="GMSMapView">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="LfC-yg-WGj" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="KvW-UH-SWk"/>
+                            <constraint firstItem="LfC-yg-WGj" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="Q1k-cq-vOv"/>
+                            <constraint firstItem="LfC-yg-WGj" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="Rf9-ff-OBS"/>
+                            <constraint firstAttribute="bottom" secondItem="LfC-yg-WGj" secondAttribute="bottom" id="oj7-XP-IdD"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="LmA-Y7-fuW"/>
+                    <connections>
+                        <outlet property="mapView" destination="LfC-yg-WGj" id="Bwm-5C-2bI"/>
+                        <outlet property="searchDisplayController" destination="8sT-gu-PKd" id="Rna-J0-YeP"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <searchDisplayController id="8sT-gu-PKd">
+                    <connections>
+                        <outlet property="delegate" destination="BYZ-38-t0r" id="TPy-kK-nGh"/>
+                        <outlet property="searchContentsController" destination="BYZ-38-t0r" id="aNQ-8H-n7p"/>
+                        <outlet property="searchResultsDataSource" destination="BYZ-38-t0r" id="t9K-FK-sJZ"/>
+                        <outlet property="searchResultsDelegate" destination="BYZ-38-t0r" id="Mnt-Bh-uPx"/>
+                    </connections>
+                </searchDisplayController>
+            </objects>
+            <point key="canvasLocation" x="1047.8260869565217" y="110.49107142857143"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="eTC-0E-Fj3">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="JlF-J1-AmL" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="bVz-ts-mzi">
+                        <rect key="frame" x="0.0" y="44" width="414" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="onL-9c-ZxE"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="8fh-hI-8QL" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="137.68115942028987" y="110.49107142857143"/>
+        </scene>
+    </scenes>
+</document>

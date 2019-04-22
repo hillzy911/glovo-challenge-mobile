@@ -9,6 +9,12 @@ Icon
 # Thumbnails
 ._*
 
+
+## Build generated
+build/
+DerivedData/
+Pods/
+
 # Files that might appear in the root of a volume
 .DocumentRevisions-V100
 .fseventsd
