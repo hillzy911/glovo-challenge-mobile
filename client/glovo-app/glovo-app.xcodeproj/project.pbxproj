@@ -14,10 +14,10 @@
 		0E146A33226D060900E72153 /* Area.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E146A31226D060900E72153 /* Area.swift */; };
 		0E146A35226D0E2D00E72153 /* APIRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E146A34226D0E2D00E72153 /* APIRouter.swift */; };
 		0E146A37226D148600E72153 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E146A36226D148600E72153 /* Constants.swift */; };
+		0E146A3B226E294A00E72153 /* CoordinatesHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E146A3A226E294A00E72153 /* CoordinatesHelper.swift */; };
 		0EFDC1EE226253DC00415938 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFDC1ED226253DC00415938 /* AppDelegate.swift */; };
 		0EFDC1F0226253DC00415938 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFDC1EF226253DC00415938 /* HomeViewController.swift */; };
 		0EFDC1F3226253DC00415938 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0EFDC1F1226253DC00415938 /* Main.storyboard */; };
-		0EFDC1F5226253DD00415938 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0EFDC1F4226253DD00415938 /* Assets.xcassets */; };
 		0EFDC1F8226253DD00415938 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0EFDC1F6226253DD00415938 /* LaunchScreen.storyboard */; };
 		0EFDC203226253DD00415938 /* glovo_appTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFDC202226253DD00415938 /* glovo_appTests.swift */; };
 		0EFDC20F22637C8400415938 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EFDC20E22637C8400415938 /* APIClient.swift */; };
@@ -42,11 +42,11 @@
 		0E146A31226D060900E72153 /* Area.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Area.swift; sourceTree = "<group>"; };
 		0E146A34226D0E2D00E72153 /* APIRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIRouter.swift; sourceTree = "<group>"; };
 		0E146A36226D148600E72153 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		0E146A3A226E294A00E72153 /* CoordinatesHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoordinatesHelper.swift; sourceTree = "<group>"; };
 		0EFDC1EA226253DC00415938 /* glovo-app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "glovo-app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0EFDC1ED226253DC00415938 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0EFDC1EF226253DC00415938 /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		0EFDC1F2226253DC00415938 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		0EFDC1F4226253DD00415938 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0EFDC1F7226253DD00415938 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0EFDC1F9226253DD00415938 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0EFDC1FE226253DD00415938 /* glovo-appTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "glovo-appTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -121,7 +121,6 @@
 				0EFDC20D22637B3B00415938 /* Network */,
 				0EFDC1EF226253DC00415938 /* HomeViewController.swift */,
 				0EFDC1F1226253DC00415938 /* Main.storyboard */,
-				0EFDC1F4226253DD00415938 /* Assets.xcassets */,
 				0EFDC1F6226253DD00415938 /* LaunchScreen.storyboard */,
 				0EFDC1F9226253DD00415938 /* Info.plist */,
 			);
@@ -160,6 +159,7 @@
 		0EFDC2132264711B00415938 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				0E146A3A226E294A00E72153 /* CoordinatesHelper.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -259,7 +259,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				0EFDC1F8226253DD00415938 /* LaunchScreen.storyboard in Resources */,
-				0EFDC1F5226253DD00415938 /* Assets.xcassets in Resources */,
 				0EFDC1F3226253DC00415938 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -308,12 +307,14 @@
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-glovo-app/Pods-glovo-app-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
+				"${BUILT_PRODUCTS_DIR}/HAActionSheet/HAActionSheet.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/HAActionSheet.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -373,6 +374,7 @@
 			files = (
 				0E146A2E226D017200E72153 /* Country.swift in Sources */,
 				0E146A35226D0E2D00E72153 /* APIRouter.swift in Sources */,
+				0E146A3B226E294A00E72153 /* CoordinatesHelper.swift in Sources */,
 				0EFDC1F0226253DC00415938 /* HomeViewController.swift in Sources */,
 				0EFDC2152264739F00415938 /* City.swift in Sources */,
 				0EFDC20F22637C8400415938 /* APIClient.swift in Sources */,

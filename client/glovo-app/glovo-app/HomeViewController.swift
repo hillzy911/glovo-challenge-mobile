@@ -2,82 +2,120 @@ import UIKit
 import UIKit
 import GoogleMaps
 import GooglePlaces
+import HAActionSheet
 
 class HomeViewController: UIViewController {
     
     @IBOutlet weak var mapView: GMSMapView!
     var locationManager = CLLocationManager()
-    var currentLocation: CLLocation?
+    var currentLocation: CLLocationCoordinate2D?
     var placesClient: GMSPlacesClient!
-    var zoomLevel: Float = 15.0
+    var currentZoomLevel: Float?
+    var countries: [Country] = []
+    var cities: [City] = []
+    var currentCountry: [City] = []
+    var zoomedOut: Bool = false
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //use user's location or chosen country
-        //create a search bar with 0 width and 0 height
-   
-        
-        //set the frame to 0 height because line above sets the height to zero.  CGRectMake(0, 10, 100, searchBar.frame.size.height)
-        //initialize Search
-        let searchBar: UISearchBar = UISearchBar(frame: .zero)
-        self.navigationItem.title = "Your Title"
-        searchBar.frame = CGRect(x: 0, y: 0, width: 0, height: searchBar.frame.size.height)
-        let topBarHeight = UIApplication.shared.statusBarFrame.size.height +
-            (self.navigationController?.navigationBar.frame.height ?? 0.0)
-        searchBar.frame = CGRect(x: 0, y: topBarHeight, width: view.frame.size.width, height: 44)
-        searchBar.isTranslucent = true
-        view.addSubview(searchBar)
-        self.loadMap()
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .search, target: self, action: #selector(showCities))
+        DispatchQueue.global(qos: .background).async {
+            self.getCountries()
+            self.getCities()
+            DispatchQueue.main.async {
+               self.loadMap()
+            }
+        }
     }
     
+    @objc func showCities(){
+        
+        var data:[String] = []
+        for cities in self.cities{
+            data.append(cities.name)
+        }
+        let view = HAActionSheet(fromView: self.view, sourceData: data)
+        view.buttonCornerRadius = 16
+        view.show { (canceled, index) in
+            if !canceled {
+                self.mapView.clear()
+                let workingAreas = self.cities.filter({ $0.countryId == self.cities[index!].countryId })
+                self.currentCountry = workingAreas
+                self.getArea(code: self.cities[index!].code)
+            }
+        }
+    }
     
+    //get countries
     func getCountries() {
-        
+        APIClient.getCountries{ result in
+            switch result {
+            case .success(let countries):
+                self.countries = countries
+            case.failure(let error):
+                self.displayErrorAlert(error: error)
+            }
+        }
     }
     
+    //get area
     func getArea(code: String) {
         APIClient.getArea(areaCode: code){ result in
             switch result {
             case .success(let area):
-                let hydeParkLocation = CLLocationCoordinate2D(latitude: 41.3851, longitude: 2.1734)
-                let camera = GMSCameraPosition.camera(withTarget: hydeParkLocation, zoom: 13)
                 
+                var bounds = GMSCoordinateBounds()
                 for workingArea in area.workingAreas {
                     let polygon = GMSPolygon()
                     polygon.path = GMSPath(fromEncodedPath: workingArea)
-                    polygon.fillColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.5)
-                    polygon.strokeColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0)
+                    if(area.enabled){
+                        //fill out with blue for enabled
+                        polygon.fillColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.5)
+                        polygon.strokeColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0)
+                    } else {
+                         //fill out with grey for disabled
+                        polygon.fillColor = UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)
+                        polygon.strokeColor = UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0)
+                    }
+                    
+                    if(polygon.path?.count() != 0){
+                        for index in 1...polygon.path!.count() {
+                            bounds = bounds.includingCoordinate(polygon.path!.coordinate(at: index))
+                        }
+                    }
                     polygon.strokeWidth = 2
                     polygon.map = self.mapView
                 }
-    
-                self.findCenter()
-                self.mapView.camera = camera
                 
-//                for index in 1...path.count() {
-//                    bounds = bounds.includingCoordinate(path.coordinateAtIndex(index))
-//                }
+                let update = GMSCameraUpdate.fit(bounds, withPadding: 10)
+                self.mapView.animate(with: update)
                 
-                //mapView.animateWithCameraUpdate(GMSCameraUpdate.fitBounds(bounds))
-                //for coordinates in {area.
+                if let title = area.description {
+                    self.title = title
+                }
+                
+                
             case .failure(let error):
-                print(print("############stucko: \(error.localizedDescription)"))
+                self.displayErrorAlert(error: error)
             }
         }
     }
     
+    //get cities
     func getCities() {
         APIClient.getCities{ result in
             switch result {
             case .success(let cities):
-                print("############We are the ones: \(cities[0].name)")
+                self.cities = cities.sorted { $0.countryId < $1.countryId }
             case .failure(let error):
-                print(print("############stucko: \(error.localizedDescription)"))
+                self.displayErrorAlert(error: error)
             }
         }
     }
     
+    //initialize delegate methods
     func initializeLocationManager() {
         self.mapView.delegate = self
         locationManager = CLLocationManager()
@@ -89,40 +127,70 @@ class HomeViewController: UIViewController {
      
     }
     
+    //load default map
     func loadMap() {
-        
-        let hydeParkLocation = CLLocationCoordinate2D(latitude: 41.3851, longitude: 2.1734)
-        let camera = GMSCameraPosition.camera(withTarget: hydeParkLocation, zoom: 16)
-        self.mapView.camera = camera
         initializeLocationManager()
-        
-        getArea(code: "BCN")
-        
+        let initialLocation = CLLocationCoordinate2D(latitude: 41.383682, longitude: 2.176591)
+        let camera = GMSCameraPosition.camera(withTarget: initialLocation, zoom: 16)
+        self.mapView.camera = camera
     }
     
-    func findCenter() {
-        
-    }
-    
-    func contains(polygon: [CGPoint], test: CGPoint) -> Bool {
-        if polygon.count <= 1 {
-            return false //or if first point = test -> return true
+    func drawWorkingAreasByCountry(cities: [City]) {
+        for city in cities {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { // Change `0.5` to the desired number of seconds.
+                for workingArea in city.workingArea {
+                    let polygon = GMSPolygon()
+                    polygon.path = GMSPath(fromEncodedPath: workingArea)
+                    polygon.fillColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 0.5)
+                    polygon.strokeColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0)
+                    polygon.strokeWidth = 2
+                    polygon.map = self.mapView
+                }
+            }
         }
-        
-        let p = UIBezierPath()
-        let firstPoint = polygon[0] as CGPoint
-        
-        p.move(to: firstPoint)
-        
-        for index in 1...polygon.count-1 {
-            p.addLine(to: polygon[index] as CGPoint)
-        }
-        
-        p.close()
-        
-        return p.contains(test)
     }
     
+    //draw markers using cnter of polygons
+    func drawWorkingMarkersByCountry(cities: [City]) {
+        for city in cities {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { // Change `0.5` to the desired number of seconds.
+                for workingArea in city.workingArea {
+                    let polygon = GMSPolygon()
+                    polygon.path = GMSPath(fromEncodedPath: workingArea)
+                    if(polygon.path?.count() != 0) {
+                        let position = CLLocationCoordinate2D(latitude: self.getPolygonCenter(polygon: polygon).latitude, longitude: self.getPolygonCenter(polygon: polygon).longitude)
+                        let marker = GMSMarker(position: position)
+                        let values = ["latitude" : position.latitude, "longitude" : position.longitude] as [String : Any]
+                        marker.userData = values
+                        marker.title = city.name
+                        marker.snippet = city.code
+                        
+                        marker.map = self.mapView
+                    }
+                }
+            }
+        }
+    }
+    
+    //center of each polygon
+    func getPolygonCenter(polygon: GMSPolygon) -> CLLocationCoordinate2D {
+        var bounds: GMSCoordinateBounds = GMSCoordinateBounds()
+        
+        for index in 1...polygon.path!.count() {
+            bounds = bounds.includingCoordinate(polygon.path!.coordinate(at: index))
+        }
+    
+        let center: CLLocationCoordinate2D = CLLocationCoordinate2D()
+        
+        return  center.middleLocationWith(firstLocation: bounds.northEast, secondLocation: bounds.southWest)
+    }
+    
+    
+    func displayErrorAlert(error: Error) {
+        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
 }
 
 extension HomeViewController: CLLocationManagerDelegate {
@@ -130,26 +198,36 @@ extension HomeViewController: CLLocationManagerDelegate {
     // Handle incoming location events.
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-//        let hydeParkLocation = CLLocationCoordinate2D(latitude: -33.87344, longitude: 151.21135)
-//        let camera = GMSCameraPosition.camera(withTarget: hydeParkLocation, zoom: 16)
-//        let mapView = GMSMapView.map(withFrame: .zero, camera: camera)
-//        mapView.animate(to: camera)
-//
-//        let hydePark = "tpwmEkd|y[QVe@Pk@BsHe@mGc@iNaAKMaBIYIq@qAMo@Eo@@[Fe@DoALu@HUb@c@XUZS^ELGxOhAd@@ZB`@J^BhFRlBN\\BZ@`AFrATAJAR?rAE\\C~BIpD"
-//        let archibaldFountain = "tlvmEqq|y[NNCXSJQOB[TI"
-//        let reflectionPool = "bewmEwk|y[Dm@zAPEj@{AO"
-//
-//        let polygon = GMSPolygon()
-//        polygon.path = GMSPath(fromEncodedPath: hydePark)
-//        //polygon.holes = [GMSPath(fromEncodedPath: archibaldFountain)!, GMSPath(fromEncodedPath: reflectionPool)!]
-//        polygon.fillColor = UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 0.2)
-//        polygon.strokeColor = UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
-//        polygon.strokeWidth = 2
-//        polygon.map = mapView
-//        view = mapView
-//
-//        //listLikelyPlaces()
+        
+        let geoCoder = CLGeocoder()
+        let location = CLLocation(latitude: (locations.first?.coordinate.latitude)! , longitude: (locations.first?.coordinate.longitude)!)
+        let gmsLocation = CLLocationCoordinate2D(latitude: (locations.first?.coordinate.latitude)!, longitude: (locations.first?.coordinate.longitude)!)
+        self.currentLocation = gmsLocation
+        let camera = GMSCameraPosition.camera(withTarget: gmsLocation, zoom: 16)
+        self.mapView.animate(to: camera)
+        
+        
+        geoCoder.reverseGeocodeLocation(location, completionHandler: { (placemarks, error) -> Void in
+            
+            var placeMark: CLPlacemark!
+            placeMark = placemarks?[0]
+            
+            // Country
+            guard let country = placeMark.addressDictionary!["Country"] as? String else {
+                return
+            }
+            
+          
+            if self.countries.contains(where: {$0.name == country}) {
+                let currentCountry: Country = self.countries.first(where: {$0.name == country})!
+                let workingAreas = self.cities.filter({ $0.countryId == currentCountry.code })
+                self.currentCountry = workingAreas
+                self.drawWorkingAreasByCountry(cities: workingAreas)
+            }
+        })
+        
     }
+
     
     // Handle authorization for the location manager.
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
@@ -157,14 +235,31 @@ extension HomeViewController: CLLocationManagerDelegate {
         case .restricted:
             print("Location access was restricted.")
         case .denied:
-            print("User denied access to location.")
+            
+            // create the alert
+            let alert = UIAlertController(title: "Alert", message: "Turn On Location Services to allow maps to determine your location", preferredStyle: UIAlertController.Style.alert)
+            
+            // add the actions (buttons)
+            alert.addAction(UIAlertAction(title: "Review Location Settings", style: UIAlertAction.Style.default, handler: {_ in
+                if let url = NSURL(string:UIApplication.openSettingsURLString) {
+                    UIApplication.shared.openURL(url as URL)
+                }
+            }))
+            alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertAction.Style.cancel, handler: nil))
+            alert.addAction(UIAlertAction(title: "It is okay, I will use search", style: UIAlertAction.Style.destructive, handler: nil))
+            
+            // show the alert
+            self.present(alert, animated: true, completion: nil)
+
             // Display the map using the default location.
-            mapView.isHidden = false
         case .notDetermined:
             print("Location status not determined.")
         case .authorizedAlways: fallthrough
         case .authorizedWhenInUse:
             print("Location status is OK.")
+            locationManager.startUpdatingLocation()
+            mapView.isMyLocationEnabled = true
+            mapView.settings.myLocationButton = true
         }
     }
     
@@ -172,7 +267,7 @@ extension HomeViewController: CLLocationManagerDelegate {
     // Handle location manager errors.
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         locationManager.stopUpdatingLocation()
-        print("Error: \(error)")
+        print(error.localizedDescription)
     }
     
 }
@@ -186,9 +281,64 @@ extension HomeViewController: GMSMapViewDelegate {
         
     }
     
+    func mapView(_ mapView: GMSMapView, idleAt position: GMSCameraPosition) {
+        //
+        print("Map is idle")
+    }
+    
+    func didTapMyLocationButton(for mapView: GMSMapView) -> Bool {
+        if (mapView.myLocation != nil) {
+            self.mapView.clear()
+            let geoCoder = CLGeocoder()
+            let location = CLLocation(latitude: (mapView.myLocation?.coordinate.latitude)! , longitude: (mapView.myLocation?.coordinate.longitude)!)
+            let gmsLocation = CLLocationCoordinate2D(latitude: (mapView.myLocation?.coordinate.latitude)!, longitude: (mapView.myLocation?.coordinate.latitude)!)
+            self.currentLocation = gmsLocation
+            let camera = GMSCameraPosition.camera(withTarget: gmsLocation, zoom: 16)
+            self.mapView.animate(to: camera)
+            
+            
+            geoCoder.reverseGeocodeLocation(location, completionHandler: { (placemarks, error) -> Void in
+                
+                var placeMark: CLPlacemark!
+                placeMark = placemarks?[0]
+                
+                // Country
+                guard let country = placeMark.addressDictionary!["Country"] as? String else {
+                    return
+                }
+                
+                
+                if self.countries.contains(where: {$0.name == country}) {
+                    let currentCountry: Country = self.countries.first(where: {$0.name == country})!
+                    let workingAreas = self.cities.filter({ $0.countryId == currentCountry.code })
+                    self.currentCountry = workingAreas
+                    self.drawWorkingAreasByCountry(cities: workingAreas)
+                }
+            })
+        }
+        return false
+    }
+    
+    func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool
+    {
+        self.getArea(code: marker.snippet!)
+        return false
+    }
+    
     func mapView(_ mapView: GMSMapView, didChange position: GMSCameraPosition) {
-        if(mapView.camera.zoom > mapView.maxZoom/2){
-           // mapView.clear()
+        
+        if(mapView.camera.zoom <= 12 && !self.zoomedOut){
+            mapView.clear()
+            if(!self.currentCountry.isEmpty){
+                self.drawWorkingMarkersByCountry(cities: self.currentCountry)
+            }
+            self.zoomedOut = true
+        } else if(mapView.camera.zoom > 12 && self.zoomedOut) {
+            mapView.clear()
+            if(!self.currentCountry.isEmpty){
+                self.drawWorkingAreasByCountry(cities: self.currentCountry)
+            }
+            self.zoomedOut = false
         }
     }
     
